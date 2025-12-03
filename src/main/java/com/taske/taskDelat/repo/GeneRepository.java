@@ -32,10 +32,7 @@ public interface GeneRepository extends JpaRepository<GeneInfo,Long> {
     List<Object[]> findByAssembly(@Param("assembly") String assembly);
 
 
-    List<GeneInfo> findByClinicalSignificanceAndAssembly(
-            String clinicalSignificance,
-            String assembly
-    );
+
 
 
 }

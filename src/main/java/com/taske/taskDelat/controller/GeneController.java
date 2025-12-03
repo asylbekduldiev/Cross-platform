@@ -1,7 +1,7 @@
 package com.taske.taskDelat.controller;
 
-import com.taske.taskDelat.model.GeneAggregate;
 import com.taske.taskDelat.model.GeneInfo;
+import com.taske.taskDelat.model.NewGeneInfo;
 import com.taske.taskDelat.service.GeneService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +20,30 @@ public class GeneController {
         this.geneService = geneService;
     }
 
-    // Получение информации по символу гена
+
+    @GetMapping("/by-phenotype")
+    public ResponseEntity<?> getPhenotype(@RequestParam String phenotypes){
+        if (phenotypes == null || phenotypes.isBlank()) {
+            return ResponseEntity
+
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"Parameter 'geneSymbol' is required\"}");
+        }
+        NewGeneInfo type = geneService.findByPhenotype(phenotypes);
+        if (type == null) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Gene not found\"}");
+        }
+
+        return ResponseEntity.ok(type);
+    }
+
     @GetMapping("/by-symbol")
     public ResponseEntity<?> getGeneInfo(@RequestParam String geneSymbol) {
         if (geneSymbol == null || geneSymbol.isBlank()) {
             return ResponseEntity
+
                     .status(HttpStatus.BAD_REQUEST)
                     .body("{\"error\": \"Parameter 'geneSymbol' is required\"}");
         }

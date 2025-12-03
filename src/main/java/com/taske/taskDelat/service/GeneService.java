@@ -1,16 +1,14 @@
 package com.taske.taskDelat.service;
 
-import com.taske.taskDelat.model.DiseaseHit;
-import com.taske.taskDelat.model.GeneAggregate;
 import com.taske.taskDelat.model.GeneInfo;
+import com.taske.taskDelat.model.NewGeneInfo;
 import com.taske.taskDelat.repo.GeneRepository;
+import com.taske.taskDelat.repo.SecondGeneRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.util.*;
 
 @Service
@@ -18,12 +16,38 @@ import java.util.*;
 public class GeneService {
 
     // private final WebClient webClient = WebClient.create("https://mygene.info/v3");
+
+    private final SecondGeneRepository newGeneRepository;
     private final GeneRepository geneRepository;
     private static final Logger log = LoggerFactory.getLogger(GeneService.class);
 
 
-    public GeneService(GeneRepository geneRepository) {
+    public GeneService(SecondGeneRepository newGeneRepository, GeneRepository geneRepository) {
+        this.newGeneRepository = newGeneRepository;
         this.geneRepository = geneRepository;
+    }
+
+
+    public NewGeneInfo findByPhenotype(String phenotypes){
+        if (phenotypes == null || phenotypes.isBlank()){
+            log.warn("Enter a phenotype");
+            return (NewGeneInfo) Collections.EMPTY_LIST;
+        }
+        List<Object[] > repo = newGeneRepository.findByPhenotype(phenotypes);
+
+        if (repo.isEmpty()) {
+            log.info("no Gene found");
+            return (NewGeneInfo) Collections.EMPTY_LIST;
+        }
+
+        Object[] row = repo.get(0);
+        Long id = (Long) row[0];
+        String referral_diagnosis = (String) row[1];
+        String phenotype = (String) row[2];
+        String conclusion = (String) row[3];
+        String notes= (String) row[4];
+        String synthetic_conclusion = (String) row[5];
+        return new NewGeneInfo(referral_diagnosis,phenotype,conclusion,notes,synthetic_conclusion);
     }
 
     @Cacheable(value = "genes", key = "#geneSymbol")
@@ -41,8 +65,17 @@ public class GeneService {
         Long variationID = (Long) row[0];
         String GeneSymbol = (String) row[1];
         String conclusion = (String) row[2];
+        String clinicalSign = (String) row[3];
+        String phenotypesIds = (String) row[4];
+        String  phenotypeList = (String) row[5];
+        String origin = (String) row[6];
+        String reviewStatus = (String) row[7];
+        String assembly = (String) row[8];
+        String regerenceAllele = (String) row[9];
+        String alternateAllele = (String) row[10];
+        String chromosomeAccession = (String) row[11];
 
-        return new GeneInfo(variationID, GeneSymbol, conclusion);
+        return new GeneInfo();
     }
 
     public List<GeneInfo> getBySignificance(String significance) {
