@@ -4,9 +4,11 @@ import com.taske.taskDelat.model.GeneInfo;
 import com.taske.taskDelat.model.NewGeneInfo;
 import com.taske.taskDelat.repo.GeneRepository;
 import com.taske.taskDelat.repo.SecondGeneRepository;
+import com.taske.taskDelat.strategy.StrategyAnalysis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.StreamingHttpOutputMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -48,6 +50,8 @@ public class GeneService {
         String notes= (String) row[4];
         String synthetic_conclusion = (String) row[5];
         return new NewGeneInfo(referral_diagnosis,phenotype,conclusion,notes,synthetic_conclusion);
+
+
     }
 
     @Cacheable(value = "genes", key = "#geneSymbol")
@@ -111,6 +115,22 @@ public class GeneService {
         }
         return res;
     }
+
+
+    public StrategyAnalysis getByDiagnosis(String diagnosis, String phenotype){
+
+        List<Object[] > repo = newGeneRepository.getByConsistency(diagnosis,phenotype);
+
+
+        if(repo.isEmpty()){
+            log.info("No diagnosis or phenotype found for diagnosis,phenotype : {}", diagnosis,phenotype);
+            return new StrategyAnalysis(false,"Фенотип (" + phenotype + ") не соответствует диагнозу: " + diagnosis);
+        }
+
+        return new StrategyAnalysis(true,"Фенотип (" + phenotype + ") характерен для диагноза: " + diagnosis);
+    }
+
+
 
     /* public GeneInfo findBySymbol(String geneSymbol){
         if(geneSymbol == null || geneSymbol.isBlank()){

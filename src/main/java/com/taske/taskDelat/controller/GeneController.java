@@ -3,6 +3,7 @@ package com.taske.taskDelat.controller;
 import com.taske.taskDelat.model.GeneInfo;
 import com.taske.taskDelat.model.NewGeneInfo;
 import com.taske.taskDelat.service.GeneService;
+import com.taske.taskDelat.strategy.StrategyAnalysis;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,13 @@ public class GeneController {
         this.geneService = geneService;
     }
 
+
+    @GetMapping("/analisis/check-consistency")
+    public StrategyAnalysis  check(@RequestParam String diagnosis,@RequestParam String phenotype){
+
+        return geneService.getByDiagnosis(diagnosis,phenotype);
+
+    }
 
     @GetMapping("/by-phenotype")
     public ResponseEntity<?> getPhenotype(@RequestParam String phenotypes){

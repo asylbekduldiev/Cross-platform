@@ -13,4 +13,7 @@ public interface SecondGeneRepository extends JpaRepository<NewGeneInfo,Long> {
 
     @Query(value="SELECT id,referral_diagnosis,phenotype,conclusion,notes,synthetic_conclusion FROM genes_infos WHERE phenotype = :phenotype",nativeQuery = true)
     List<Object[]> findByPhenotype(@Param("phenotype") String phenotype);
+
+    @Query(value = "SELECT id ,referral_diagnosis,phenotype FROM genes_infos WHERE referral_diagnosis = :referral_diagnosis AND phenotype =  :phenotype ",nativeQuery = true)
+    List<Object []>  getByConsistency(@Param("referral_diagnosis") String diagnosis,@Param("phenotype") String phenotype);
 }
