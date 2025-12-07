@@ -1,6 +1,10 @@
 package com.taske.taskDelat.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taske.taskDelat.model.GeneInfo;
+import com.taske.taskDelat.model.GeneInfoJson;
 import com.taske.taskDelat.model.NewGeneInfo;
 import com.taske.taskDelat.repo.GeneRepository;
 import com.taske.taskDelat.repo.SecondGeneRepository;
@@ -11,6 +15,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.StreamingHttpOutputMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.*;
 
 @Service
@@ -130,6 +138,37 @@ public class GeneService {
         return new StrategyAnalysis(true,"Фенотип (" + phenotype + ") характерен для диагноза: " + diagnosis);
     }
 
+    public GeneInfoJson getByGeneSymbolAtJson(String geneSymbol) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+
+
+        List<GeneInfoJson> list = mapper.readValue(
+                new File("src/main/resources/clinvar_cleaned.json"),
+                new TypeReference<List<GeneInfoJson>>(){});
+
+
+        return list.stream()
+                .filter( g -> g.getGeneSymbol().equalsIgnoreCase(geneSymbol))
+                .findFirst()
+                .orElse(null);
+
+    }
+
+    public GeneInfoJson getByAssemblyAtJson(String asseml) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+
+
+        List<GeneInfoJson> list = mapper.readValue(
+                new File("src/main/resources/clinvar_cleaned.json"),
+                new TypeReference<List<GeneInfoJson>>(){});
+
+
+        return list.stream()
+                .filter( g -> g.getAssembly().equalsIgnoreCase(asseml))
+                .findFirst()
+                .orElse(null);
+
+    }
 
 
     /* public GeneInfo findBySymbol(String geneSymbol){

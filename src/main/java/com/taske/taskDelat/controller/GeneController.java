@@ -1,13 +1,20 @@
 package com.taske.taskDelat.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taske.taskDelat.model.GeneInfo;
+import com.taske.taskDelat.model.GeneInfoJson;
 import com.taske.taskDelat.model.NewGeneInfo;
 import com.taske.taskDelat.service.GeneService;
 import com.taske.taskDelat.strategy.StrategyAnalysis;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -23,14 +30,20 @@ public class GeneController {
 
 
     @GetMapping("/analisis/check-consistency")
-    public StrategyAnalysis  check(@RequestParam String diagnosis,@RequestParam String phenotype){
+    public StrategyAnalysis  check(@Parameter(
+            description = "Анализ и сходства по диагнозу",
+            example = "Пневмония: боль в животе, диарея"
+    )@RequestParam String diagnosis,@RequestParam String phenotype){
 
         return geneService.getByDiagnosis(diagnosis,phenotype);
 
     }
 
     @GetMapping("/by-phenotype")
-    public ResponseEntity<?> getPhenotype(@RequestParam String phenotypes){
+    public ResponseEntity<?> getPhenotype(@Parameter(
+            description = "Поиск по фенотипу",
+            example = "желтушность кожи, темная моча"
+    )@RequestParam String phenotypes){
         if (phenotypes == null || phenotypes.isBlank()) {
             return ResponseEntity
 
@@ -86,7 +99,7 @@ public class GeneController {
     }
 
     // Фильтрация по типу сборки (Assembly)
-    @GetMapping("/by-assembly")
+    /*@GetMapping("/by-assembly")
     public ResponseEntity<?> getByAssembly(@RequestParam String assembly) {
         if (assembly == null || assembly.isBlank()) {
             return ResponseEntity
@@ -102,6 +115,40 @@ public class GeneController {
         }
 
         return ResponseEntity.ok(res);
+    }*/
+
+
+    @GetMapping("/by-geneSymbol")
+    public ResponseEntity<?> getGene(@Parameter(
+            description = "Название ген (например KMT2D)",
+            example = "KMT2D"
+    ) @RequestParam  String gene) throws IOException {
+        GeneInfoJson res = geneService.getByGeneSymbolAtJson(gene);
+        if (res == null) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Gene not found\"}");
+        }
+        return ResponseEntity.ok(res);
     }
+
+    @Operation(
+            summary = "Поиск записи по полю Assembly",
+            description = "Возвращает первую запись из JSON файла, у которой поле Assembly совпадает с переданным значением."
+    )
+    @GetMapping("/by-assembly")
+    public ResponseEntity<?> getAssembly(@Parameter(
+            description = "Название геномной сборки (например GRCh38)",
+            example = "GRCh38"
+    ) @RequestParam  String assembl) throws IOException {
+        GeneInfoJson res = geneService.getByAssemblyAtJson(assembl);
+        if (res == null) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Gene not found\"}");
+        }
+        return ResponseEntity.ok(res);
+    }
+
 }
 
