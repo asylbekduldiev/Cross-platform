@@ -1,0 +1,28 @@
+
+services:
+  app:
+    build: .
+    ports:
+      - "8085:8085"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/task_manager
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: user
+      JWT_SECRET: verySecretKeyChangeThisToEnvOrVault-VERY_LONG
+      JWT_EXPIRATION: 3600000
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: task_manager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: user
+    ports:
+      - "5433:5432"   # хост:контейнер
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

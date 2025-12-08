@@ -1,7 +1,6 @@
 package com.taske.taskDelat.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taske.taskDelat.model.GeneInfo;
 import com.taske.taskDelat.model.GeneInfoJson;
@@ -12,13 +11,12 @@ import com.taske.taskDelat.strategy.StrategyAnalysis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.StreamingHttpOutputMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.io.InputStream;
 import java.util.*;
 
 @Service
@@ -26,17 +24,40 @@ import java.util.*;
 public class GeneService {
 
     // private final WebClient webClient = WebClient.create("https://mygene.info/v3");
-
     private final SecondGeneRepository newGeneRepository;
     private final GeneRepository geneRepository;
+
+   private final List<GeneInfoJson> geneList;
+
+
+
     private static final Logger log = LoggerFactory.getLogger(GeneService.class);
 
 
-    public GeneService(SecondGeneRepository newGeneRepository, GeneRepository geneRepository) {
+    public GeneService(SecondGeneRepository newGeneRepository, GeneRepository geneRepository) throws IOException {
         this.newGeneRepository = newGeneRepository;
         this.geneRepository = geneRepository;
+        ObjectMapper mapper = new ObjectMapper();
+        InputStream is = getClass().getClassLoader().getResourceAsStream("clinvar_cleaned.json");
+        if (is == null) {
+            throw new FileNotFoundException("Resource not found: clinvar_cleaned.json");
+        }
+        geneList = mapper.readValue(is, new TypeReference<List<GeneInfoJson>>(){});
+
     }
 
+
+
+    /*public GeneService(SecondGeneRepository newGeneRepository) throws IOException {
+        this.newGeneRepository = newGeneRepository;
+        ObjectMapper mapper = new ObjectMapper();
+        InputStream is = getClass().getClassLoader().getResourceAsStream("clinvar_cleaned.json");
+        if (is == null) {
+            throw new FileNotFoundException("Resource not found: clinvar_cleaned.json");
+        }
+        geneList = mapper.readValue(is, new TypeReference<List<GeneInfoJson>>(){});
+    }
+*/
 
     public NewGeneInfo findByPhenotype(String phenotypes){
         if (phenotypes == null || phenotypes.isBlank()){
@@ -138,12 +159,29 @@ public class GeneService {
         return new StrategyAnalysis(true,"Фенотип (" + phenotype + ") характерен для диагноза: " + diagnosis);
     }
 
-    public GeneInfoJson getByGeneSymbolAtJson(String geneSymbol) throws IOException {
+    public GeneInfoJson getByGeneSymbolAtJson(String geneSymbol) {
+        return geneList.stream()
+                .filter(g -> g.getGeneSymbol().equalsIgnoreCase(geneSymbol))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public GeneInfoJson getByAssemblyAtJson(String assembly) {
+        return geneList.stream()
+                .filter(g -> g.getAssembly().equalsIgnoreCase(assembly))
+                .findFirst()
+                .orElse(null);
+    }
+    /*public GeneInfoJson getByGeneSymbolAtJson(String geneSymbol) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 
+        InputStream is = getClass().getClassLoader().getResourceAsStream("clinvar_cleaned.json");
+        if (is == null) {
+            throw new FileNotFoundException("Resource not found: clinvar_cleaned.json");
+        }
 
         List<GeneInfoJson> list = mapper.readValue(
-                new File("src/main/resources/clinvar_cleaned.json"),
+                is,
                 new TypeReference<List<GeneInfoJson>>(){});
 
 
@@ -157,9 +195,12 @@ public class GeneService {
     public GeneInfoJson getByAssemblyAtJson(String asseml) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 
-
+        InputStream is = getClass().getClassLoader().getResourceAsStream("clinvar_cleaned.json");
+        if (is == null) {
+            throw new FileNotFoundException("Resource not found: clinvar_cleaned.json");
+        }
         List<GeneInfoJson> list = mapper.readValue(
-                new File("src/main/resources/clinvar_cleaned.json"),
+                is,
                 new TypeReference<List<GeneInfoJson>>(){});
 
 
@@ -168,7 +209,7 @@ public class GeneService {
                 .findFirst()
                 .orElse(null);
 
-    }
+    }*/
 
 
     /* public GeneInfo findBySymbol(String geneSymbol){
